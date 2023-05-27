@@ -1,0 +1,20 @@
+[package]
+name = "csvgears"
+version = "0.1.0"
+edition = "2021"
+
+[[bin]]
+name = "csvcut"
+path = "src/csvcut.rs"
+
+[[bin]]
+name = "csvgrep"
+path = "src/csvgrep.rs"
+
+# See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
+
+[dependencies]
+argh = "0.1.10"
+csv = "1.2.*"
+regex = "1"
+
