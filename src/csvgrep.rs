@@ -1,6 +1,8 @@
 use argh::FromArgs;
 use regex::Regex;
 
+use csvgears::{csv_reader_from_stdin, csv_writer_to_stdout};
+
 #[derive(FromArgs)]
 /// Select columns from CSV data.
 struct Args {
@@ -59,17 +61,11 @@ fn main() -> Result<(), csv::Error> {
         panic!("Unreachable.");
     }
 
-    let input_lines = std::io::BufReader::new(std::io::stdin());
-    let mut reader =
-        csv::ReaderBuilder::new()
-        .delimiter(args.delimiter as u8)
-        .from_reader(input_lines);
-
-    let header: Vec<String> =
-        reader.headers()?.iter().map(str::to_string).collect();
+    let mut csv_reader = csv_reader_from_stdin(args.delimiter)?;
 
     let column_index: usize =
-        match header.iter().position(|value| *value == args.column) {
+        match csv_reader.header.iter().position(|value|
+                                                *value == args.column) {
             Some(index) => index,
             None => {
                 eprintln!("csvgrep: error: Column '{}' is not present \
@@ -78,11 +74,10 @@ fn main() -> Result<(), csv::Error> {
             }
         };
 
-    let mut writer = csv::Writer::from_writer(std::io::stdout());
+    let mut csv_writer =
+        csv_writer_to_stdout(Some(csv_reader.header.clone()))?;
 
-    writer.write_record(&header)?;
-
-    for record in reader.records() {
+    for record in csv_reader.reader.records() {
         let input_record = record?;
         let cell = input_record[column_index].to_string();
 
@@ -98,7 +93,7 @@ fn main() -> Result<(), csv::Error> {
 
         if (!args.invert && record_matches)
             || (args.invert && !record_matches) {
-            writer.write_record(&input_record)?;
+            csv_writer.writer.write_record(&input_record)?;
         }
     }
 

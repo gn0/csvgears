@@ -1,5 +1,7 @@
 use argh::FromArgs;
 
+use csvgears::{csv_reader_from_stdin, csv_writer_to_stdout};
+
 #[derive(FromArgs)]
 /// Select columns from CSV data.
 struct Args {
@@ -26,14 +28,7 @@ fn main() -> Result<(), csv::Error> {
             std::process::exit(1);
         }
 
-    let input_lines = std::io::BufReader::new(std::io::stdin());
-    let mut reader =
-        csv::ReaderBuilder::new()
-        .delimiter(args.delimiter as u8)
-        .from_reader(input_lines);
-
-    let input_header: Vec<String> =
-        reader.headers()?.iter().map(str::to_string).collect();
+    let mut csv_reader = csv_reader_from_stdin(args.delimiter)?;
     let column_spec =
         args.include.clone()
             .unwrap_or_else(
@@ -43,7 +38,8 @@ fn main() -> Result<(), csv::Error> {
         column_spec
         .split(',')
         .map(|name| {
-            match input_header.iter().position(|value| value == name) {
+            match csv_reader.header.iter().position(|value|
+                                                    value == name) {
                 Some(index) => index,
                 None => {
                     eprintln!("csvcut: error: Column '{name}' is not \
@@ -54,24 +50,23 @@ fn main() -> Result<(), csv::Error> {
         })
         .collect();
 
-    let mut writer = csv::Writer::from_writer(std::io::stdout());
-
-    let output_header_record: Vec<_> =
+    let output_header_record: Vec<String> =
         if args.include.is_some() {
             column_indices.iter()
-                .map(|index| &input_header[*index])
+                .map(|index| csv_reader.header[*index].clone())
                 .collect()
         } else {
-            input_header.iter()
+            csv_reader.header.iter()
                 .enumerate()
                 .filter(|(index, _)| !column_indices.contains(index))
-                .map(|(_, value)| value)
+                .map(|(_, value)| value.to_string())
                 .collect()
         };
 
-    writer.write_record(&output_header_record)?;
+    let mut csv_writer =
+        csv_writer_to_stdout(Some(output_header_record))?;
 
-    for record in reader.records() {
+    for record in csv_reader.reader.records() {
         let input_record = record?;
 
         let output_record: Vec<_> =
@@ -88,7 +83,7 @@ fn main() -> Result<(), csv::Error> {
                     .collect()
             };
 
-        writer.write_record(&output_record)?;
+        csv_writer.writer.write_record(&output_record)?;
     }
 
     Ok(())
