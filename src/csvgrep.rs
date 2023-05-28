@@ -4,7 +4,7 @@ use regex::Regex;
 use csvgears::{csv_reader_from_stdin, csv_writer_to_stdout};
 
 #[derive(FromArgs)]
-/// Select columns from CSV data.
+/// Select rows from CSV data based on cell contents in a column.
 struct Args {
     #[argh(option, short = 'd', default = "','")]
     /// delimiter [default: ',']
