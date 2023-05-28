@@ -1,12 +1,12 @@
 use std::io::{BufReader, Read, Stdin, Stdout, Write};
 
 pub struct CsvReader<R: Read> {
-    pub reader: Box<csv::Reader<R>>,
+    pub reader: csv::Reader<R>,
     pub header: Vec<String>,
 }
 
 pub struct CsvWriter<W: Write> {
-    pub writer: Box<csv::Writer<W>>,
+    pub writer: csv::Writer<W>,
     pub header: Option<Vec<String>>,
 }
 
@@ -24,17 +24,14 @@ pub fn csv_reader_from_stdin(delimiter: char)
         reader.headers()?.iter().map(str::to_string).collect();
 
     Ok(CsvReader {
-        reader: Box::new(reader),
+        reader,
         header,
     })
 }
 
 pub fn csv_writer_to_stdout(header: Option<Vec<String>>)
                             -> Result<CsvWriter<Stdout>, csv::Error> {
-    let mut writer =
-        Box::new(
-            csv::Writer::from_writer(
-                std::io::stdout()));
+    let mut writer = csv::Writer::from_writer(std::io::stdout());
 
     if let Some(cells) = header.clone() {
         writer.write_record(cells)?;
