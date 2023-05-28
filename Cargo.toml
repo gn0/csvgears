@@ -11,6 +11,10 @@ path = "src/csvcut.rs"
 name = "csvgrep"
 path = "src/csvgrep.rs"
 
+[[bin]]
+name = "csvsed"
+path = "src/csvsed.rs"
+
 # See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
 
 [dependencies]
