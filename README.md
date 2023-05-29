@@ -93,11 +93,22 @@ $
 This utility modifies cell values by replacing occurrences of a pattern with the replacement given.
 
 ```
-$ printf "foo,bar,baz\nlorem,ipsum,dolor\nsit,amet,\n" \
-    | csvsed -c bar -p '.m' -t 'x'
+$ printf "foo,bar\nlorem,ipsum\ndolor,sit\n" \
+    | csvsed -c bar -p 's.' -t 'x'
+foo,bar
+lorem,ipxm
+dolor,xt
+$
+```
+
+The resulting cell value can be saved to a new column:
+
+```
+$ printf "foo,bar\nlorem,ipsum\ndolor,sit\n" \
+    | csvsed -c bar -r baz -p 's.' -t 'x'
 foo,bar,baz
-lorem,ipsx,dolor
-sit,xet,
+lorem,ipsum,ipxm
+dolor,sit,xt
 $
 ```
 
