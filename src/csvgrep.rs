@@ -78,12 +78,12 @@ fn main() -> Result<(), csv::Error> {
 
     for record in csv_reader.reader.records() {
         let input_record = record?;
-        let cell = input_record[column_index].to_string();
+        let cell = &input_record[column_index];
 
         let record_matches: bool =
             match &pattern {
                 Pattern::Regex(regex) => {
-                    regex.find(&cell).is_some()
+                    regex.find(cell).is_some()
                 },
                 Pattern::FixedString(fixed_string) => {
                     cell.contains(fixed_string)
