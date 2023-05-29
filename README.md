@@ -3,9 +3,9 @@
 
 This Rust crate provides the following command-line utilities:
 
-- `csvcut`
-- `csvgrep`
-- `csvsed`
+- [`csvcut`](#csvcut)
+- [`csvgrep`](#csvgrep)
+- [`csvsed`](#csvsed)
 
 These implement the basic functionalities of the homonymous utilities in the [`csvkit`](https://pypi.org/project/csvkit/) and [`sacsv`](https://github.com/gn0/sacsv) Python packages but with 6-to-12-times faster execution and with lower memory use.
 
