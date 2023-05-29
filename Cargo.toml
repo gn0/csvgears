@@ -15,6 +15,11 @@ path = "src/csvgrep.rs"
 name = "csvsed"
 path = "src/csvsed.rs"
 
+[profile.release]
+strip = true
+opt-level = 3
+lto = true
+
 # See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
 
 [dependencies]
