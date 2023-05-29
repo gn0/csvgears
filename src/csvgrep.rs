@@ -58,7 +58,7 @@ fn main() -> Result<(), csv::Error> {
     } else if let Some(fixed_string) = args.fixed_string {
         pattern = Pattern::FixedString(fixed_string);
     } else {
-        panic!("Unreachable.");
+        unreachable!();
     }
 
     let mut csv_reader = csv_reader_from_stdin(args.delimiter)?;
