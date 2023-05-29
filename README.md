@@ -101,7 +101,7 @@ sit,xet,
 $
 ```
 
-Since `csvgears` uses the `regex` crate as its regular expression engine, named capture groups can also be used in the pattern and the replacement:
+Since `csvgears` uses the [`regex`](https://crates.io/crates/regex) crate as its regular expression engine, named capture groups can also be used in the pattern and the replacement:
 
 ```
 $ printf "foo,bar\n2023-05-29,ipsum\n1970-01-01,dolor\n" \
