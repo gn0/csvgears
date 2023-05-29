@@ -21,12 +21,11 @@ struct Args {
 fn main() -> Result<(), csv::Error> {
     let args: Args = argh::from_env();
 
-    if (args.include.is_none() && args.exclude.is_none())
-        || (args.include.is_some() && args.exclude.is_some()) {
-            eprintln!("csvcut: error: Must specify either -c or -C \
-                       but not both.");
-            std::process::exit(1);
-        }
+    if !(args.include.is_none() ^ args.exclude.is_none()) {
+        eprintln!("csvcut: error: Must specify either -c or -C \
+                   but not both.");
+        std::process::exit(1);
+    }
 
     let mut csv_reader = csv_reader_from_stdin(args.delimiter)?;
     let column_spec =

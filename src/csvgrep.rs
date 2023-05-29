@@ -35,12 +35,11 @@ enum Pattern {
 fn main() -> Result<(), csv::Error> {
     let args: Args = argh::from_env();
 
-    if (args.regex.is_none() && args.fixed_string.is_none())
-        || (args.regex.is_some() && args.fixed_string.is_some()) {
-            eprintln!("csvgrep: error: Must specify either -r or -m \
-                       but not both.");
-            std::process::exit(1);
-        }
+    if !(args.regex.is_none() ^ args.fixed_string.is_none()) {
+        eprintln!("csvgrep: error: Must specify either -r or -m \
+                   but not both.");
+        std::process::exit(1);
+    }
 
     let pattern: Pattern;
 
@@ -91,8 +90,7 @@ fn main() -> Result<(), csv::Error> {
                 },
             };
 
-        if (!args.invert && record_matches)
-            || (args.invert && !record_matches) {
+        if args.invert ^ record_matches {
             csv_writer.writer.write_record(&input_record)?;
         }
     }
