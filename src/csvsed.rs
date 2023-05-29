@@ -14,6 +14,10 @@ struct Args {
     /// column to apply the pattern to
     column: String,
 
+    #[argh(option, short = 'r')]
+    /// column to save the result to
+    result_column: Option<String>,
+
     #[argh(option, short = 'p')]
     /// regular expression to match against the cells of the column
     pattern: String,
@@ -49,8 +53,28 @@ fn main() -> Result<(), csv::Error> {
             }
         };
 
+    let output_header =
+        match &args.result_column {
+            Some(result) => {
+                if csv_reader.header.contains(result) {
+                    eprintln!("csvsed: error: Column '{}' already \
+                               exists in the input.", result);
+                    std::process::exit(4);
+                }
+
+                let mut new_header = csv_reader.header.clone();
+
+                new_header.push(result.clone());
+
+                new_header
+            },
+            None => {
+                csv_reader.header.clone()
+            },
+        };
+
     let mut csv_writer =
-        csv_writer_to_stdout(Some(csv_reader.header.clone()))?;
+        csv_writer_to_stdout(Some(output_header))?;
 
     for record in csv_reader.reader.records() {
         let input_record = record?;
@@ -61,17 +85,13 @@ fn main() -> Result<(), csv::Error> {
                 &args.replacement)
             .into_owned();
 
-        let output_record: Vec<_> =
-            input_record.iter()
-            .enumerate()
-            .map(|(index, cell)|
-                 if index == column_index {
-                     new_cell.as_str()
-                 } else {
-                     cell
-                 }
-            )
-            .collect();
+        let mut output_record: Vec<_> = input_record.iter().collect();
+
+        if args.result_column.is_some() {
+            output_record.push(&new_cell);
+        } else {
+            output_record[column_index] = &new_cell;
+        }
 
         csv_writer.writer.write_record(&output_record)?;
     }
