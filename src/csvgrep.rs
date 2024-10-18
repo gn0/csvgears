@@ -1,5 +1,6 @@
 use argh::FromArgs;
 use regex::Regex;
+use std::vec::Vec;
 
 use csvgears::{csv_reader_from_stdin, csv_writer_to_stdout};
 
@@ -23,21 +24,45 @@ struct Args {
     regex: Option<String>,
 
     #[argh(option, short = 'm')]
-    /// fixed string to search for in the cells of the column
+    /// fixed string to search for in the cells of the column (need not
+    /// be an exact match)
     fixed_string: Option<String>,
+
+    #[argh(option, short = 'f', long = "file")]
+    /// path to a file, each line of which gets matched against the
+    /// cells of a column (must be an exact match)
+    file_path: Option<String>,
 }
 
 enum Pattern {
     Regex(Regex),
     FixedString(String),
+    File(Vec<String>),
+}
+
+fn load_file(file_path: &str) -> Option<Vec<String>> {
+    Some(
+        std::fs::read_to_string(file_path)
+            .ok()?
+            .lines()
+            .map(ToString::to_string)
+            .collect::<_>(),
+    )
+}
+
+fn exactly_one<T>(values: &[T], predicate: fn(&T) -> bool) -> bool {
+    values.iter().filter(|x| predicate(x)).count() == 1
 }
 
 fn main() -> Result<(), csv::Error> {
     let args: Args = argh::from_env();
 
-    if !(args.regex.is_none() ^ args.fixed_string.is_none()) {
-        eprintln!("csvgrep: error: Must specify either -r or -m \
-                   but not both.");
+    if !exactly_one(
+        &[&args.regex, &args.fixed_string, &args.file_path],
+        |x| x.is_some()
+    ) {
+        eprintln!("csvgrep: error: Must specify exactly one of -r, -m, \
+                   and -f.");
         std::process::exit(1);
     }
 
@@ -56,6 +81,15 @@ fn main() -> Result<(), csv::Error> {
         }
     } else if let Some(fixed_string) = args.fixed_string {
         pattern = Pattern::FixedString(fixed_string);
+    } else if let Some(file_path) = args.file_path {
+        let Some(exact_strings) = load_file(&file_path)
+        else {
+            eprintln!("csvgrep: error: Cannot load contents of \
+                       '{file_path}'.");
+            std::process::exit(3);
+        };
+
+        pattern = Pattern::File(exact_strings);
     } else {
         unreachable!();
     }
@@ -69,7 +103,7 @@ fn main() -> Result<(), csv::Error> {
             None => {
                 eprintln!("csvgrep: error: Column '{}' is not present \
                            in the input.", args.column);
-                std::process::exit(3)
+                std::process::exit(4)
             }
         };
 
@@ -82,12 +116,9 @@ fn main() -> Result<(), csv::Error> {
 
         let record_matches: bool =
             match &pattern {
-                Pattern::Regex(regex) => {
-                    regex.find(cell).is_some()
-                },
-                Pattern::FixedString(fixed_string) => {
-                    cell.contains(fixed_string)
-                },
+                Pattern::Regex(regex) => regex.find(cell).is_some(),
+                Pattern::FixedString(fixed_string) => cell.contains(fixed_string),
+                Pattern::File(exact_strings) => exact_strings.iter().any(|x| cell == x),
             };
 
         if args.invert ^ record_matches {
