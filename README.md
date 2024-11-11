@@ -16,7 +16,7 @@ If you are running Ubuntu, Debian, or another Linux distribution that uses `apt`
 After that, run:
 
 ```
-$ cargo install --git https://codeberg.org/gnyeki/csvgears.git
+$ cargo install --git https://github.com/gn0/csvgears.git
 ```
 
 If `$HOME/.cargo/bin` is not in your `PATH` environment variable yet, then you also need to run:
